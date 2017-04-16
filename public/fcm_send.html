@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Welcome to Firebase Hosting</title>
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.js"
+      integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+      crossorigin="anonymous"></script>
+    <script>
+    const SERVER_KEY = "AAAA5gsk_p0:APA91bGcUA5q30WTqvUxQTxcsQZcfWRZE51NAOT3NwCcad6FDnYQcC5Yq8GZWzOjoWw76b_6nOt7gSDTBdiasJ6M6ND_lzNR3zMgXArWBCO2SuI8L0M9wzG7f-PL6jcK-ZcIVe3zdzkZ";
+    const YOUR_IID_TOKEN = "cbqsorylF6I:APA91bETO3eEubzh_tynVPwfCziFl9inpvCPQriiVj4pHKJDAReq6vEUFG_fq47FNHj9Ki7j465sVkbLKDiAw1JLa-3VScrpYTbnKcmanP81fOqi_Fu54HHd6A1OKh9HKlhZ3KpSqawo";
+    $(function(){
+      console.log("onload");
+      //FCMへPOSTする
+      const options = {
+        url:'https://fcm.googleapis.com/fcm/send',
+        type:"POST",
+        headers:{
+          "Authorization":"key="+SERVER_KEY,
+          "Content-Type":"application/json"
+        },
+        contentType: 'application/json',
+        dataType: "json",
+        data:JSON.stringify({
+          notification: {
+            title: "タイトル",
+            body: "本文",
+            icon: "/images/icon.png",
+            click_action: "http://localhost:5000"
+          },
+          to: YOUR_IID_TOKEN
+        }),
+        success:function(json) {
+          console.log("success");
+          console.log(json);
+        },
+        error: function() {},
+        complete: function() {}
+      };
+      $.ajax(options);
+    });
+    </script>
+  </head>
+<body>
+</body>
+</html>

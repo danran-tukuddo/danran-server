@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Welcome to Firebase Hosting</title>
+    <script src="https://www.gstatic.com/firebasejs/3.7.0/firebase.js"></script>
+    <script src="script/index.js"></script>
+    <script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyC9JRjdpamqT3jMaLzbeY0H4-org8DhWS4",
+        authDomain: "danran-5202a.firebaseapp.com",
+        databaseURL: "https://danran-5202a.firebaseio.com",
+        storageBucket: "danran-5202a.appspot.com",
+        messagingSenderId: "988029451933"
+      };
+      firebase.initializeApp(config);
+    </script>
+    <script>
+    /*
+    var db = firebase.database();
+    var chatAll = db.ref("/chat/all");
+
+    //入力内容を更新した時
+    function changeData(){
+      var message = document.getElementById("message").value;
+      chatAll.set({message:message});
+    }
+
+    //DB内容が変更されたとき実行される
+    chatAll.on("value", function(snapshot) {
+      document.getElementById("textMessage").innerText = snapshot.val().message;
+    });
+    */
+    //ストレージのルートのリファレンスを取得
+    var storageRef = firebase.storage().ref();
+
+    //ストレージのルートにあるsample.pngのリファレンスを取得
+    var imgSample = storageRef.child('sample.png');
+
+    //ストレージへアップロードする
+    var btnUploadChange = function(ev){
+       //ストレージへアップロードするファイルのパスを生成する
+       var uploadRef = storageRef.child('upload.png');
+       const f = ev.target.files[0];
+       uploadRef.put(f).then(function(snapshot) {
+         console.log('Uploaded a blob or file!');
+
+         //アップロードしたファイルを表示してみる
+         uploadRef.getDownloadURL().then(function(url){
+           console.log("imgSample "+url);
+           document.getElementById("imgSample").style.backgroundImage = "url("+url+")";
+         }).catch(function(error) {
+           // Handle any errors
+           console.log(error);
+         });
+
+       });
+    };
+
+    //FacebookAuthProviderを生成
+    var provider = new firebase.auth.FacebookAuthProvider();
+    var clickBtnLogin = function(){
+      //認証
+      firebase.auth().signInWithPopup(provider).then(function(result) {
+        //ログイン成功
+        var token = result.credential.accessToken;
+        var user = result.user;
+      }).catch(function(error) {
+        //エラー
+        var errorCode = error.code;
+        var errorMessage = error.message;
+        var email = error.email;
+        var credential = error.credential;
+      });
+    };
+
+    const messaging = firebase.messaging();
+    messaging.onMessage(function(payload) {
+      console.log("Message received. ", payload);
+      alert(payload.notification.title+"\r\n"
+            +payload.notification.body+"\r\n"
+            +payload.notification.icon);
+    });
+
+    //プッシュ通知パーミッション取得
+    var requestPermission = function () {
+      messaging.requestPermission()
+      .then(function() {
+        //ユーザー毎のトークンを取得してみる
+        messaging.getToken()
+        .then(function(token) {
+          console.log('Token refreshed.');
+          console.log("token "+token);
+          document.getElementById("txtIIToken").value = token;
+        })
+        .catch(function(err) {
+          console.log('Unable to retrieve refreshed token ', err);
+        });
+      })
+      .catch(function(err) {
+        console.log('Unable to get permission to notify.', err);
+      });
+    }
+
+    window.onload = function() {
+      document.getElementById("btnLogin").onclick = clickBtnLogin;
+      //htmlロード完了したらストレージの画像を表示してみる
+      imgSample.getDownloadURL().then(function(url){
+        console.log("imgSample "+url);
+        document.getElementById("imgSample").style.backgroundImage = "url("+url+")";
+      }).catch(function(error) {
+        // Handle any errors
+        console.log(error);
+      });
+
+      document.getElementById("btnUpload").onchange = btnUploadChange;
+
+      //パーミッションを取得するボタンクリック時
+      document.getElementById("btnWebPush").onclick = requestPermission;
+    };
+    </script>
+    <link rel="manifest" href="/manifest.json">
+  </head>
+<body>
+  <img src="http://203.145.105.57:8686/video" style="position:absolute;top:50%;left:50%;-webkit-transform: translateY(-50%) translateX(-50%);width:300px;height:300px;">
+  <audio id="html5_audio" controls>
+    <source src="http://203.145.105.57:8686/audio.wav" type='audio/wav'/>
+  </audio>
+  <div>
+    <input type="button" value="ログイン" id="btnLogin">
+    <div id="imgSample" style="display:block;width:200px;height:200px;background-color:#c0c0c0;"></div>
+    <input type="file" id="btnUpload" value="アップロード">
+    <p>リアルタイムデータベース</p>
+    <div id="textMessage"></div>
+    <input type="text" name="" id="message">
+    <a onclick="changeData()">更新</a>
+    <br>
+    <input type="button" id="btnWebPush" value="WebPush権限を取得">
+    <br>
+    <input type="text" value="YOUR-IID-TOKEN" id="txtIIToken" style="width:80%;">
+  </div>
+</body>
+</html>
