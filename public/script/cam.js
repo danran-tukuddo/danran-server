@@ -4,7 +4,7 @@ class Page{
   constructor(){
     console.log("constructor");
     //デバイス固有のID
-    this.deviceCode = "Rb6LFUGK";
+    this.identifier = "Rb6LFUGK";
 
     const _this = this;
     this.WS_SERVER_PROTOCOL  = "wss";
@@ -137,7 +137,7 @@ class Page{
       var command = {
           command_id: "offer",
           options: {
-              force_hw_vcodec: false,
+              force_hw_vcodec: true,
               vformat: "60"
           }
       };
@@ -163,14 +163,14 @@ class Page{
   //シグナリングイベントのリスナーを設定する
   initSignalingListener(){
     const _this = this;
-    this.webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING+"/"+this.deviceCode);
+    this.webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING+"/"+this.identifier);
     //DB内容が変更されたとき実行される
     Rx.Observable.fromEvent(this.webRtcSignalingAll, "value")
                   .subscribe(function(snapshot){
                       const evt = snapshot.val();
                       console.log("evt "+evt);
                       //ユーザーIDをチェックして自分以外だった時だけ以下の処理を実行
-                      if((evt == null)||(_this.deviceCode == evt.userID)){
+                      if((evt == null)||(_this.identifier == evt.identifier)){
                           return;
                       }
                       if (evt.type === _this.rtcUtil.TYPE_OFFER) {
@@ -229,13 +229,13 @@ class Page{
     console.log("sendSdp");
     console.log("type="+type);
     console.log(sdp);
-    const webRtcSignaling = new WebRtcSignaling(this.deviceCode,type,{"sdp":sdp});
+    const webRtcSignaling = new WebRtcSignaling(this.identifier,type,{"sdp":sdp});
     this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
   sendIceCandiDates(iceCandiDates){
     console.log("sendIceCandiDates");
-    const webRtcSignaling = new WebRtcSignaling(this.deviceCode,this.rtcUtil.TYPE_CANDI_DATES,{"icecandidates":iceCandiDates});
+    const webRtcSignaling = new WebRtcSignaling(this.identifier,this.rtcUtil.TYPE_CANDI_DATES,{"icecandidates":iceCandiDates});
     this.webRtcSignalingAll.set(webRtcSignaling);
   }
 

@@ -6,9 +6,9 @@ class Page{
   //コンストラクタ
   constructor(){
     console.log("constructor");
-    this.userID = "V5pyf8h4";
+    this.identifier = "V5pyf8h4";
     //接続先デバイスコード
-    this.deviceCode = "Rb6LFUGK";
+    this.deviceIdentifier = "Rb6LFUGK";
 
     //ローカルデバイスのユーザーメディアストリーム
     this.streamLocal = null;
@@ -31,14 +31,14 @@ class Page{
   //シグナリングイベントのリスナーを設定する
   initSignalingListener(){
     const _this = this;
-    this.webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING+"/"+this.deviceCode);
+    this.webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING+"/"+this.deviceIdentifier);
     //DB内容が変更されたとき実行される
     Rx.Observable.fromEvent(this.webRtcSignalingAll, "value")
                   .subscribe(function(snapshot){
                       const evt = snapshot.val();
                       console.log("evt "+evt);
                       //ユーザーIDをチェックして自分以外だった時だけ以下の処理を実行
-                      if((evt == null)||(_this.userID == evt.userID)){
+                      if((evt == null)||(_this.identifier == evt.identifier)){
                           return;
                       }
 
@@ -134,14 +134,14 @@ class Page{
   //リモートのカメラ画像を取得する
   startVideoRemote(){
     console.log("startVideoRemote");
-    const webRtcSignaling = new WebRtcSignaling(this.userID,this.rtcUtil.TYPE_REMOTE_CALL,{});
+    const webRtcSignaling = new WebRtcSignaling(this.identifier,this.rtcUtil.TYPE_REMOTE_CALL,{});
     this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
   //リモートのカメラ画像を停止する
   stopVideoRemote(){
     console.log("stopVideoRemote");
-    const webRtcSignaling = new WebRtcSignaling(this.userID,this.rtcUtil.TYPE_REMOTE_HUNG_UP,{});
+    const webRtcSignaling = new WebRtcSignaling(this.identifier,this.rtcUtil.TYPE_REMOTE_HUNG_UP,{});
     this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
@@ -162,7 +162,7 @@ class Page{
     console.log("onSendIceCandiDate");
     console.log(icecandidate);
 
-    const webRtcSignaling = new WebRtcSignaling(this.userID,this.rtcUtil.TYPE_CANDI_DATE,{"icecandidate":JSON.stringify(icecandidate)});
+    const webRtcSignaling = new WebRtcSignaling(this.identifier,this.rtcUtil.TYPE_CANDI_DATE,{"icecandidate":JSON.stringify(icecandidate)});
     this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
@@ -171,7 +171,7 @@ class Page{
     console.log("onSendSdp");
     console.log("type="+type);
     console.log(sdp);
-    const webRtcSignaling = new WebRtcSignaling(this.userID,type,{"sdp":sdp});
+    const webRtcSignaling = new WebRtcSignaling(this.identifier,type,{"sdp":sdp});
     this.webRtcSignalingAll.set(webRtcSignaling);
   }
 }
