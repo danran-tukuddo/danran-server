@@ -3,11 +3,12 @@
 class Page{
   constructor(){
     console.log("constructor");
-    this.userID = "iT5kQyKA";
+    //デバイス固有のID
+    this.deviceCode = "Rb6LFUGK";
 
     const _this = this;
     this.WS_SERVER_PROTOCOL  = "wss";
-    this.WS_SERVER_HOST_NAME = "192.168.10.9";
+    this.WS_SERVER_HOST_NAME = "localhost";
     this.WS_SERVER_HOST_PORT = "8090";
 
     //WebRTCユーテリティ
@@ -68,7 +69,8 @@ class Page{
     console.log("msg.type="+msg.type);
     switch (msg.type) {
       case "message":
-        alert(msg.data);
+        //alert(msg.data);
+        console.error(msg.data);
         break;
       case "offer":
         console.log("msg.sdp="+msg.sdp);
@@ -145,7 +147,12 @@ class Page{
 
   //WSでコマンドを送信する
   wsSend(command){
-    console.log("wsSend　ws.readyState "+this.ws.readyState);
+    console.log("wsSend");
+    if(this.ws == null){
+      console.log("　ws is null");
+      return;
+    }
+    console.log("　ws.readyState "+this.ws.readyState);
     //readyState 1 OPEN
     if(this.ws.readyState != 1){
       return;
@@ -156,18 +163,16 @@ class Page{
   //シグナリングイベントのリスナーを設定する
   initSignalingListener(){
     const _this = this;
-    const webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING);
+    this.webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING+"/"+this.deviceCode);
     //DB内容が変更されたとき実行される
-    Rx.Observable.fromEvent(webRtcSignalingAll, "value")
+    Rx.Observable.fromEvent(this.webRtcSignalingAll, "value")
                   .subscribe(function(snapshot){
                       const evt = snapshot.val();
-
+                      console.log("evt "+evt);
                       //ユーザーIDをチェックして自分以外だった時だけ以下の処理を実行
-                      if(_this.userID == evt.userID){
+                      if((evt == null)||(_this.deviceCode == evt.userID)){
                           return;
                       }
-
-                      console.log(snapshot.val());
                       if (evt.type === _this.rtcUtil.TYPE_OFFER) {
                         //offer SDPを受信したので offerを設定
                         _this.rtcUtil.setOffer(evt.data.sdp);
@@ -210,24 +215,28 @@ class Page{
                   });
   }
 
-  onRemoteVideoStream(stream){
+  onRemoteStreamAdded(stream){
+    console.log("onRemoteStreamAdded");
     u("#videoRemote").attr("src",windowURL.createObjectURL(stream));
+  }
+
+  onRemoteStreamRemoved(){
+    console.log("onRemoteStreamRemoved");
+    u("#videoRemote").attr("src","");
   }
 
   sendSdp(type,sdp){
     console.log("sendSdp");
     console.log("type="+type);
     console.log(sdp);
-    const webRtcSignaling = new WebRtcSignaling(this.userID,type,{"sdp":sdp});
-    const webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING);
-    webRtcSignalingAll.set(webRtcSignaling);
+    const webRtcSignaling = new WebRtcSignaling(this.deviceCode,type,{"sdp":sdp});
+    this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
   sendIceCandiDates(iceCandiDates){
     console.log("sendIceCandiDates");
-    const webRtcSignaling = new WebRtcSignaling(this.userID,this.rtcUtil.TYPE_CANDI_DATES,{"icecandidates":iceCandiDates});
-    const webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING);
-    webRtcSignalingAll.set(webRtcSignaling);
+    const webRtcSignaling = new WebRtcSignaling(this.deviceCode,this.rtcUtil.TYPE_CANDI_DATES,{"icecandidates":iceCandiDates});
+    this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
   //WebRtc リスナー

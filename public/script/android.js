@@ -7,6 +7,8 @@ class Page{
   constructor(){
     console.log("constructor");
     this.userID = "V5pyf8h4";
+    //接続先デバイスコード
+    this.deviceCode = "Rb6LFUGK";
 
     //ローカルデバイスのユーザーメディアストリーム
     this.streamLocal = null;
@@ -29,16 +31,16 @@ class Page{
   //シグナリングイベントのリスナーを設定する
   initSignalingListener(){
     const _this = this;
-    const webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING);
+    this.webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING+"/"+this.deviceCode);
     //DB内容が変更されたとき実行される
-    Rx.Observable.fromEvent(webRtcSignalingAll, "value")
+    Rx.Observable.fromEvent(this.webRtcSignalingAll, "value")
                   .subscribe(function(snapshot){
                       const evt = snapshot.val();
+                      console.log("evt "+evt);
                       //ユーザーIDをチェックして自分以外だった時だけ以下の処理を実行
-                      if(_this.userID == evt.userID){
+                      if((evt == null)||(_this.userID == evt.userID)){
                           return;
                       }
-                      console.log(snapshot.val());
 
                       if (evt.type === _this.rtcUtil.TYPE_ANSWER) {
                         //answer SDPを受信した
@@ -133,20 +135,24 @@ class Page{
   startVideoRemote(){
     console.log("startVideoRemote");
     const webRtcSignaling = new WebRtcSignaling(this.userID,this.rtcUtil.TYPE_REMOTE_CALL,{});
-    const webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING);
-    webRtcSignalingAll.set(webRtcSignaling);
+    this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
   //リモートのカメラ画像を停止する
   stopVideoRemote(){
     console.log("stopVideoRemote");
     const webRtcSignaling = new WebRtcSignaling(this.userID,this.rtcUtil.TYPE_REMOTE_HUNG_UP,{});
-    const webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING);
-    webRtcSignalingAll.set(webRtcSignaling);
+    this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
-  onRemoteVideoStream(stream){
+  onRemoteStreamAdded(stream){
+    console.log("onRemoteStreamAdded");
     u("#videoRemote").attr("src",windowURL.createObjectURL(stream));
+  }
+
+  onRemoteStreamRemoved(){
+    console.log("onRemoteStreamRemoved");
+    u("#videoRemote").attr("src","");
   }
 
   //WebRtc リスナー
@@ -157,8 +163,7 @@ class Page{
     console.log(icecandidate);
 
     const webRtcSignaling = new WebRtcSignaling(this.userID,this.rtcUtil.TYPE_CANDI_DATE,{"icecandidate":JSON.stringify(icecandidate)});
-    const webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING);
-    webRtcSignalingAll.set(webRtcSignaling);
+    this.webRtcSignalingAll.set(webRtcSignaling);
   }
 
   //SDPをシグナリングの為に送信
@@ -167,8 +172,7 @@ class Page{
     console.log("type="+type);
     console.log(sdp);
     const webRtcSignaling = new WebRtcSignaling(this.userID,type,{"sdp":sdp});
-    const webRtcSignalingAll = firebase.database().ref(config.FIREBASE_DB_WEBRTC_SIGNALING);
-    webRtcSignalingAll.set(webRtcSignaling);
+    this.webRtcSignalingAll.set(webRtcSignaling);
   }
 }
 

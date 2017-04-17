@@ -27,7 +27,8 @@ class RTCUtil {
       }
     };
     this.ice_config = {"iceServers": [
-         {"urls": ["stun:stun.l.google.com:19302","stun:192.168.10.9:3478"]}
+         //"stun:192.168.10.9:3478"
+         {"urls": ["stun:stun.l.google.com:19302"]}
     ]};
 
     this.pc_options = {
@@ -72,10 +73,14 @@ class RTCUtil {
   }
 
   ringUp(){
+      const _this = this;
       Rx.Observable.of(this.peerConnection)
           .subscribe(function(connection){
             console.log("close");
             connection.close();
+            if(_this.listener!= null){
+              _this.listener.onRemoteStreamRemoved();
+            }
           });
   }
 
@@ -114,7 +119,7 @@ class RTCUtil {
                         console.log('this.listener is null.');
                         return;
                       }
-                      _this.listener.onRemoteVideoStream(event.streams[0]);
+                      _this.listener.onRemoteStreamAdded(event.streams[0]);
                     });
     }
     else{
@@ -125,7 +130,7 @@ class RTCUtil {
                         console.log('this.listener is null.');
                         return;
                       }
-                      _this.listener.onRemoteVideoStream(event.stream);
+                      _this.listener.onRemoteStreamAdded(event.stream);
                     });
     }
 
